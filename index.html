@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantRisk Bot — Institutional Quant Analysis via Telegram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #08090d;
+  --bg2:      #0d0f17;
+  --bg3:      #111420;
+  --border:   #1e2235;
+  --border2:  #2a2f4a;
+  --text:     #e8eaf0;
+  --muted:    #5a6380;
+  --dim:      #94a3b8;
+  --green:    #4ade80;
+  --green2:   #166534;
+  --green3:   #052010;
+  --red:      #f87171;
+  --amber:    #fbbf24;
+  --blue:     #4a6cf7;
+  --blue2:    #1e2a5e;
+  --mono:     'Space Mono', monospace;
+  --sans:     'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(74,108,247,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74,108,247,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none; z-index: 0;
+}
+
+section, header, footer, nav { position: relative; z-index: 1; }
+
+/* ── Nav ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 16px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(8,9,13,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+.logo {
+  font-family: var(--mono); font-size: 14px; font-weight: 700;
+  letter-spacing: 2px; color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+.logo-dot {
+  width: 8px; height: 8px; background: var(--green);
+  border-radius: 50%; animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.4; transform:scale(0.8); }
+}
+.nav-links { display: flex; gap: 32px; list-style: none; }
+.nav-links a {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); text-decoration: none; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 1px;
+  padding: 8px 18px; border: 1px solid var(--green);
+  color: var(--green); background: transparent;
+  border-radius: 4px; cursor: pointer; text-decoration: none;
+  transition: all 0.2s;
+}
+.nav-cta:hover { background: var(--green); color: var(--bg); }
+
+/* ── Hero ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 40px 80px; text-align: center; position: relative;
+}
+.hero-glow {
+  position: absolute; width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(74,108,247,0.08) 0%, transparent 70%);
+  top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none;
+}
+.hero-badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--green);
+  border: 1px solid var(--green2); background: var(--green3);
+  padding: 5px 14px; border-radius: 20px; margin-bottom: 32px;
+  display: inline-block; animation: fadeUp 0.6s ease both;
+}
+.hero h1 {
+  font-size: clamp(48px,8vw,96px); font-weight: 800;
+  line-height: 1.0; letter-spacing: -2px; margin-bottom: 24px;
+  animation: fadeUp 0.6s ease 0.1s both;
+}
+.hero h1 span {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub {
+  font-size: 18px; color: var(--dim); max-width: 560px;
+  margin: 0 auto 48px; font-weight: 400;
+  animation: fadeUp 0.6s ease 0.2s both;
+}
+.hero-cta {
+  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.6s ease 0.3s both;
+}
+.btn-primary {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+  padding: 14px 32px; background: var(--blue); color: white;
+  border: none; border-radius: 6px; cursor: pointer;
+  text-decoration: none; transition: all 0.2s; display: inline-block;
+}
+.btn-primary:hover { background: #6b8af9; transform: translateY(-2px); }
+.btn-secondary {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+  padding: 14px 32px; background: transparent; color: var(--dim);
+  border: 1px solid var(--border2); border-radius: 6px; cursor: pointer;
+  text-decoration: none; transition: all 0.2s; display: inline-block;
+}
+.btn-secondary:hover { border-color: var(--dim); color: var(--text); }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── Ticker ── */
+.ticker {
+  background: var(--bg2);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 12px 0; overflow: hidden; white-space: nowrap;
+}
+.ticker-inner {
+  display: inline-flex; gap: 48px;
+  animation: ticker 30s linear infinite;
+}
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-item {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.ticker-item .sym { color: var(--text); font-weight: 700; }
+.ticker-item .up  { color: var(--green); }
+.ticker-item .dn  { color: var(--red); }
+
+/* ── Section commons ── */
+.section-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--blue); margin-bottom: 12px;
+}
+.section-title { font-size: 36px; font-weight: 700; margin-bottom: 48px; line-height: 1.2; }
+
+/* ══════════════════════════════════════════════════
+   LIVE DASHBOARD
+══════════════════════════════════════════════════ */
+#dashboard {
+  padding: 80px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Login overlay ── */
+#login-overlay {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 48px;
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
+}
+#login-overlay h3 {
+  font-size: 20px; font-weight: 700; margin-bottom: 8px;
+}
+#login-overlay p {
+  font-size: 13px; color: var(--dim); margin-bottom: 32px;
+}
+.login-field {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 12px 16px; color: var(--text);
+  font-family: var(--mono); font-size: 13px; margin-bottom: 12px;
+  outline: none; transition: border-color 0.2s;
+}
+.login-field:focus { border-color: var(--blue); }
+.login-btn {
+  width: 100%; padding: 12px; background: var(--blue); border: none;
+  border-radius: 6px; color: white; font-family: var(--mono);
+  font-size: 12px; letter-spacing: 1px; cursor: pointer;
+  transition: background 0.2s; margin-top: 4px;
+}
+.login-btn:hover { background: #6b8af9; }
+.login-error {
+  font-family: var(--mono); font-size: 11px; color: var(--red);
+  margin-top: 12px; display: none;
+}
+
+/* ── Dashboard content ── */
+#dashboard-content { display: none; }
+
+.dash-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+}
+.dash-title { font-size: 24px; font-weight: 700; }
+.dash-meta {
+  display: flex; align-items: center; gap: 16px;
+}
+.live-indicator {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--green);
+}
+.live-dot {
+  width: 8px; height: 8px; background: var(--green);
+  border-radius: 50%; animation: pulse-dot 1.5s infinite;
+}
+.last-updated {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+}
+.refresh-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1px;
+  padding: 6px 14px; border: 1px solid var(--border2); color: var(--dim);
+  background: transparent; border-radius: 4px; cursor: pointer;
+  transition: all 0.2s;
+}
+.refresh-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ── Score cards grid ── */
+.cards-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; margin-bottom: 20px;
+}
+.score-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; position: relative;
+  overflow: hidden; transition: border-color 0.3s;
+}
+.score-card:hover { border-color: var(--border2); }
+.score-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+}
+.score-card.gold::before { background: linear-gradient(90deg, var(--amber), transparent); }
+.score-card.us30::before { background: linear-gradient(90deg, var(--blue), transparent); }
+
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.card-name {
+  font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-class {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  color: var(--muted); background: var(--bg3);
+  border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px;
+}
+.card-price { text-align: right; }
+.card-price .price { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+.card-price .change { font-family: var(--mono); font-size: 11px; }
+.up { color: var(--green); }
+.dn { color: var(--red); }
+
+.tf-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.tf-item { display: flex; align-items: center; gap: 10px; }
+.tf-label { font-family: var(--mono); font-size: 10px; color: var(--muted); width: 40px; flex-shrink: 0; }
+.tf-bar-bg { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.tf-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+.tf-score { font-family: var(--mono); font-size: 10px; width: 28px; text-align: right; }
+.tf-verdict { font-family: var(--mono); font-size: 9px; width: 70px; text-align: right; }
+
+.verdict-badge {
+  display: inline-block; font-family: var(--mono); font-size: 11px;
+  font-weight: 700; letter-spacing: 1px; padding: 6px 16px;
+  border-radius: 6px; width: 100%; text-align: center;
+}
+.verdict-badge.strong-buy { background:#052010; border:1px solid var(--green); color:var(--green); }
+.verdict-badge.buy        { background:#052010; border:1px solid #166534; color:var(--green); }
+.verdict-badge.strong-sell{ background:#1a0505; border:1px solid var(--red); color:var(--red); }
+.verdict-badge.sell       { background:#1a0505; border:1px solid #5c1a1a; color:var(--red); }
+.verdict-badge.neutral    { background:#1a1200; border:1px solid #5c4200; color:var(--amber); }
+
+/* ── Signals strip ── */
+.signals-strip {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px 24px;
+  display: grid; grid-template-columns: repeat(5,1fr); gap: 16px;
+  margin-bottom: 20px;
+}
+.signal-item { text-align: center; }
+.signal-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.signal-val { font-family: var(--mono); font-size: 16px; font-weight: 700; }
+.signal-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* ── Trade setup panel ── */
+.setup-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; margin-bottom: 20px;
+}
+.setup-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px;
+}
+.setup-card h4 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+}
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.setup-item {}
+.setup-item .lbl {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  color: var(--muted); text-transform: uppercase; margin-bottom: 3px;
+}
+.setup-item .val {
+  font-family: var(--mono); font-size: 14px; font-weight: 700;
+}
+
+/* ── News ── */
+.news-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; margin-bottom: 20px;
+}
+.news-card h4 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 16px;
+}
+.news-item {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.news-item:last-child { border-bottom: none; padding-bottom: 0; }
+.news-headline {
+  font-size: 13px; color: var(--text); text-decoration: none;
+  transition: color 0.2s; line-height: 1.4;
+}
+.news-headline:hover { color: var(--blue); }
+.news-meta {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  display: flex; gap: 12px;
+}
+
+/* ── Loading skeleton ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--border) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skel-price   { height: 28px; width: 120px; }
+.skel-bar     { height: 4px; width: 100%; }
+.skel-badge   { height: 32px; width: 100%; }
+.skel-signal  { height: 40px; width: 60px; margin: 0 auto; }
+
+/* ══════════════════════════════════════════════════
+   Features / How / Models / Stats / CTA / Footer
+   (unchanged from original)
+══════════════════════════════════════════════════ */
+.preview { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
+
+.features { padding: 80px 40px; max-width: 1100px; margin: 0 auto; }
+.features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.feature-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 28px; transition: all 0.3s;
+}
+.feature-card:hover { border-color: var(--border2); transform: translateY(-4px); }
+.feature-icon { font-size: 24px; margin-bottom: 16px; }
+.feature-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.feature-desc { font-size: 13px; color: var(--dim); line-height: 1.6; }
+
+.how { padding: 80px 40px; background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.how-inner { max-width: 1100px; margin: 0 auto; }
+.steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; margin-top: 48px; position: relative; }
+.steps::before {
+  content: ''; position: absolute; top: 28px;
+  left: 15%; right: 15%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+}
+.step { text-align: center; }
+.step-num {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 16px; font-weight: 700;
+  color: var(--blue); margin: 0 auto 20px;
+}
+.step-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+.step-desc { font-size: 13px; color: var(--dim); line-height: 1.6; }
+
+.telegram-section {
+  padding: 80px 40px; max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+}
+.tg-phone {
+  background: #1c1c1e; border-radius: 24px; padding: 20px;
+  border: 1px solid #2c2c2e; font-family: var(--mono); font-size: 11px;
+  position: relative; max-width: 320px; margin: 0 auto;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+}
+.tg-header {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 12px; border-bottom: 1px solid #2c2c2e; margin-bottom: 16px;
+}
+.tg-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--green));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.tg-name { font-size: 13px; font-weight: 700; color: white; }
+.tg-status { font-size: 10px; color: var(--green); }
+.tg-msg {
+  background: #2c2c2e; border-radius: 12px 12px 12px 4px;
+  padding: 12px 14px; margin-bottom: 10px;
+  font-size: 10px; line-height: 1.7; color: #e5e5ea;
+}
+.tg-msg .head { color: var(--amber); font-weight: 700; margin-bottom: 6px; font-size: 11px; }
+.tg-msg .grn  { color: var(--green); }
+.tg-msg .red  { color: var(--red); }
+.tg-msg .blu  { color: #60a5fa; }
+.tg-msg .sep  { color: #48484a; margin: 4px 0; }
+.tg-msg .mut  { color: #8e8e93; }
+.tg-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.tg-btn {
+  background: #2c2c2e; border: 1px solid #48484a;
+  border-radius: 8px; padding: 7px 10px; font-size: 10px;
+  color: #60a5fa; text-align: center; cursor: pointer;
+}
+.telegram-text h2 { font-size: 36px; font-weight: 700; line-height: 1.2; margin-bottom: 20px; }
+.telegram-text p { font-size: 15px; color: var(--dim); line-height: 1.7; margin-bottom: 16px; }
+.cmd-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+.cmd-list li { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--dim); }
+.cmd { font-family: var(--mono); font-size: 11px; background: var(--bg3); border: 1px solid var(--border2); padding: 3px 10px; border-radius: 4px; color: var(--blue); flex-shrink: 0; }
+
+.models { padding: 80px 40px; background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.models-inner { max-width: 1100px; margin: 0 auto; }
+.models-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.model-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px;
+  display: flex; gap: 20px; align-items: flex-start;
+}
+.model-num {
+  font-family: var(--mono); font-size: 24px; font-weight: 700;
+  color: var(--border2); flex-shrink: 0; line-height: 1;
+}
+.model-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.model-desc { font-size: 12px; color: var(--dim); line-height: 1.6; }
+
+.stats { padding: 80px 40px; max-width: 1100px; margin: 0 auto; text-align: center; }
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; margin-top: 48px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 32px 24px;
+}
+.stat-num { font-family: var(--mono); font-size: 40px; font-weight: 700; color: var(--blue); margin-bottom: 8px; }
+.stat-label { font-size: 13px; color: var(--dim); }
+
+.cta-section {
+  padding: 100px 40px; text-align: center; position: relative; overflow: hidden;
+}
+.cta-glow {
+  position: absolute; width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(74,108,247,0.1) 0%, transparent 70%);
+  top:50%; left:50%; transform:translate(-50%,-50%); pointer-events:none;
+}
+.cta-section h2 { font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 20px; }
+.cta-section p { font-size: 16px; color: var(--dim); margin-bottom: 40px; max-width: 500px; margin-left: auto; margin-right: auto; }
+
+footer {
+  border-top: 1px solid var(--border); padding: 40px;
+  text-align: center; background: var(--bg2);
+}
+.footer-logo {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 3px;
+  color: var(--muted); margin-bottom: 12px;
+}
+.footer-text { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-links { display: none; }
+  .hero { padding: 100px 20px 60px; }
+  .cards-row { grid-template-columns: 1fr; }
+  .signals-strip { grid-template-columns: repeat(3,1fr); }
+  .setup-row { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .steps { grid-template-columns: 1fr; }
+  .steps::before { display: none; }
+  .telegram-section { grid-template-columns: 1fr; }
+  .models-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  #dashboard { padding: 40px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo"><div class="logo-dot"></div> QUANTRISK BOT</div>
+  <ul class="nav-links">
+    <li><a href="#dashboard">Live Dashboard</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#models">Models</a></li>
+  </ul>
+  <a href="https://t.me/" class="nav-cta">Open in Telegram →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-badge">● Live · Institutional · Telegram-native</div>
+  <h1>Quant-grade analysis<br><span>delivered to you</span></h1>
+  <p class="hero-sub">Six institutional models. Five timeframes. Gold and US30. Live in Telegram every morning at 7:30 AM EAT — and on demand anytime.</p>
+  <div class="hero-cta">
+    <a href="https://t.me/" class="btn-primary">Open QuantRisk Bot →</a>
+    <a href="#dashboard" class="btn-secondary">View Live Dashboard</a>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker-inner">
+    <span class="ticker-item"><span class="sym">GLD</span> Gold · Loading… </span>
+    <span class="ticker-item"><span class="sym">DIA</span> US30 · Loading… </span>
+    <span class="ticker-item"><span class="sym">REGIME</span> Fetching live data…</span>
+    <span class="ticker-item"><span class="sym">GLD</span> Gold · Loading… </span>
+    <span class="ticker-item"><span class="sym">DIA</span> US30 · Loading… </span>
+    <span class="ticker-item"><span class="sym">REGIME</span> Fetching live data…</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     LIVE DASHBOARD
+═══════════════════════════════════════════════ -->
+<section id="dashboard">
+  <div class="section-label">Live Dashboard</div>
+  <div class="section-title" style="margin-bottom:32px">Real-time quant scores</div>
+
+  <!-- Login overlay -->
+  <div id="login-overlay">
+    <div style="font-size:32px;margin-bottom:16px">🔐</div>
+    <h3>Dashboard Access</h3>
+    <p>Enter your credentials to view live scores, signals, and trade setups.</p>
+    <input class="login-field" id="login-user" type="text"     placeholder="Username" autocomplete="username">
+    <input class="login-field" id="login-pass" type="password" placeholder="Password" autocomplete="current-password">
+    <button class="login-btn" onclick="doLogin()">ACCESS DASHBOARD</button>
+    <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
+  </div>
+
+  <!-- Dashboard (hidden until login) -->
+  <div id="dashboard-content">
+
+    <!-- Header -->
+    <div class="dash-header">
+      <div class="dash-title">Live Scores</div>
+      <div class="dash-meta">
+        <div class="live-indicator"><div class="live-dot"></div> LIVE</div>
+        <div class="last-updated" id="last-updated">Fetching…</div>
+        <button class="refresh-btn" onclick="fetchData(true)">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Score cards -->
+    <div class="cards-row" id="score-cards">
+      <!-- Skeleton Gold -->
+      <div class="score-card gold">
+        <div class="card-header">
+          <div class="card-name">🥇 Gold (GLD) <span class="card-class">Commodity</span></div>
+          <div class="card-price"><div class="skeleton skel-price"></div></div>
+        </div>
+        <div class="tf-row">
+          <div class="tf-item"><span class="tf-label">15M</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">1H</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">4H</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">Daily</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">Weekly</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+        </div>
+        <div class="skeleton skel-badge"></div>
+      </div>
+      <!-- Skeleton US30 -->
+      <div class="score-card us30">
+        <div class="card-header">
+          <div class="card-name">🏦 US30 (DIA) <span class="card-class">Index</span></div>
+          <div class="card-price"><div class="skeleton skel-price"></div></div>
+        </div>
+        <div class="tf-row">
+          <div class="tf-item"><span class="tf-label">15M</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">1H</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">4H</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">Daily</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+          <div class="tf-item"><span class="tf-label">Weekly</span><div class="tf-bar-bg"><div class="skeleton skel-bar"></div></div></div>
+        </div>
+        <div class="skeleton skel-badge"></div>
+      </div>
+    </div>
+
+    <!-- Signals strip -->
+    <div class="signals-strip" id="signals-strip">
+      <div class="signal-item"><div class="signal-label">Momentum</div><div class="skeleton skel-signal"></div></div>
+      <div class="signal-item"><div class="signal-label">Z-Score</div><div class="skeleton skel-signal"></div></div>
+      <div class="signal-item"><div class="signal-label">Trend ER</div><div class="skeleton skel-signal"></div></div>
+      <div class="signal-item"><div class="signal-label">VWAP</div><div class="skeleton skel-signal"></div></div>
+      <div class="signal-item"><div class="signal-label">Vol Regime</div><div class="skeleton skel-signal"></div></div>
+    </div>
+
+    <!-- Trade setup panels -->
+    <div class="setup-row" id="setup-row">
+      <div class="setup-card">
+        <h4>Gold — Trade Setup</h4>
+        <div class="skeleton" style="height:120px;border-radius:8px;"></div>
+      </div>
+      <div class="setup-card">
+        <h4>US30 — Trade Setup</h4>
+        <div class="skeleton" style="height:120px;border-radius:8px;"></div>
+      </div>
+    </div>
+
+    <!-- News -->
+    <div class="news-card" id="news-card">
+      <h4>Live Market News</h4>
+      <div class="skeleton" style="height:200px;border-radius:8px;"></div>
+    </div>
+
+  </div><!-- /dashboard-content -->
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-label">Features</div>
+  <div class="section-title">Everything a serious trader needs</div>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">📡</div><div class="feature-title">Live Data, Always Fresh</div><div class="feature-desc">Every request pulls real candle data from Twelve Data and live news from Finnhub. No stale numbers — ever.</div></div>
+    <div class="feature-card"><div class="feature-icon">🧮</div><div class="feature-title">Quant-Grade Models</div><div class="feature-desc">Time-series momentum, Z-score mean reversion, trend efficiency regime filter, VWAP institutional positioning, and volatility regime classifier.</div></div>
+    <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-title">On-Demand Anytime</div><div class="feature-desc">Full live report with a single command. Buttons work too — no typing needed. Every request fetches fresh data in real time.</div></div>
+    <div class="feature-card"><div class="feature-icon">🎯</div><div class="feature-title">Precise Trade Setups</div><div class="feature-desc">Entry zone, stop loss, two profit targets with R:R ratios calculated from ATR. Direction confirmed by regime and VWAP filter.</div></div>
+    <div class="feature-card"><div class="feature-icon">🔔</div><div class="feature-title">Score Flip Alerts</div><div class="feature-desc">Bot checks every 30 minutes. The moment a verdict flips — BUY to SELL or vice versa — you get an instant Telegram alert.</div></div>
+    <div class="feature-card"><div class="feature-icon">🌐</div><div class="feature-title">Web Dashboard</div><div class="feature-desc">Full live scores, signals, and trade setups in your browser. Password-protected. Updates automatically every 30 seconds.</div></div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="section-label">How It Works</div>
+    <div class="section-title">Three steps to better trading decisions</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Bot fetches live data</div>
+        <div class="step-desc">Every request or at 7:30 AM EAT, the bot pulls real candle data across all 5 timeframes from Twelve Data and live news from Finnhub.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Quant engine runs analysis</div>
+        <div class="step-desc">Six quant models calculate scores simultaneously. Regime filter determines which model leads. Sharpe weighting adapts to recent accuracy automatically.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Report arrives in Telegram</div>
+        <div class="step-desc">Complete analysis with scores, trade setup, entry/stop/targets, correlation signals, live news catalysts, and final verdict — all in one clean message.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TELEGRAM MOCKUP -->
+<section class="telegram-section">
+  <div class="tg-phone">
+    <div class="tg-header">
+      <div class="tg-avatar">QR</div>
+      <div><div class="tg-name">QuantRisk Bot</div><div class="tg-status">● online</div></div>
+    </div>
+    <div class="tg-msg">
+      <div class="head">🥇 Gold (GLD) · Commodity</div>
+      <div class="mut" id="tg-date">12 Apr 2026  07:30 EAT</div>
+      <div class="sep">──────────────────────</div>
+      <div>Price: <span class="grn" id="tg-price">$248.70  ▲ +1.2%</span></div>
+      <div>Regime: <span class="grn" id="tg-regime">TRENDING</span></div>
+      <div class="sep">──────────────────────</div>
+      <div class="mut">QUANT SCORES</div>
+      <div>15M  [████████░░] <span class="grn" id="tg-15m">76  BUY</span></div>
+      <div>1H   [████████░░] <span class="grn" id="tg-1h">79  BUY</span></div>
+      <div>4H   [████████░░] <span class="grn" id="tg-4h">82  STR BUY</span></div>
+      <div>Daily[████████░░] <span class="grn" id="tg-daily">80  STR BUY</span></div>
+      <div>Week [███████░░░] <span class="grn" id="tg-weekly">71  BUY</span></div>
+      <div class="sep">──────────────────────</div>
+      <div class="mut">TRADE SETUP</div>
+      <div>Direction: <span class="grn" id="tg-dir">LONG</span></div>
+      <div>Entry: <span class="blu" id="tg-entry">$247.80 — $248.20</span></div>
+      <div>Stop:  <span class="red" id="tg-stop">$246.40</span></div>
+      <div>TP1:   <span class="grn" id="tg-tp1">$251.00  RR 1:2</span></div>
+      <div>TP2:   <span class="grn" id="tg-tp2">$253.60  RR 1:3</span></div>
+      <div>Conf:  <span class="grn" id="tg-conf">82%</span></div>
+      <div class="sep">──────────────────────</div>
+      <div id="tg-verdict">🟢 VERDICT: STRONG BUY</div>
+    </div>
+    <div class="tg-buttons">
+      <div class="tg-btn">🥇 Gold</div>
+      <div class="tg-btn">🏦 US30</div>
+      <div class="tg-btn">📊 Summary</div>
+      <div class="tg-btn">🎯 Setups</div>
+      <div class="tg-btn">📅 Weekly</div>
+      <div class="tg-btn">🔄 Refresh</div>
+    </div>
+  </div>
+  <div class="telegram-text">
+    <div class="section-label">Telegram Interface</div>
+    <h2>Everything in one clean message</h2>
+    <p>No app to install. No dashboard to check. The full institutional-grade analysis arrives directly in your Telegram at 7:30 AM EAT every morning and whenever you need it.</p>
+    <p>Tap buttons or type commands — live data fetched instantly every time.</p>
+    <ul class="cmd-list">
+      <li><span class="cmd">/gold</span> Full Gold quant report with trade setup</li>
+      <li><span class="cmd">/us30</span> Full US30 quant report with trade setup</li>
+      <li><span class="cmd">/setup</span> Live trade setups — entry, stop, targets</li>
+      <li><span class="cmd">/summary</span> Quick score snapshot both instruments</li>
+      <li><span class="cmd">/weekly</span> 7-day performance recap</li>
+    </ul>
+  </div>
+</section>
+
+<!-- QUANT MODELS -->
+<section class="models" id="models">
+  <div class="models-inner">
+    <div class="section-label">Quant Models</div>
+    <div class="section-title">Six institutional-grade models<br>running simultaneously</div>
+    <div class="models-grid">
+      <div class="model-card"><div class="model-num">01</div><div><div class="model-title">Time-Series Momentum Factor</div><div class="model-desc">Measures returns across 5, 10, and 20-bar lookback windows simultaneously. Weights recent performance higher (0.5 / 0.3 / 0.2). The single most consistently profitable quant signal documented across 100 years of market data.</div></div></div>
+      <div class="model-card"><div class="model-num">02</div><div><div class="model-title">Z-Score Mean Reversion</div><div class="model-desc">Measures how many standard deviations price has moved from its 20-period mean. When Z-score exceeds ±2.0 the model signals statistical reversion probability. Acts as lead signal in ranging regimes.</div></div></div>
+      <div class="model-card"><div class="model-num">03</div><div><div class="model-title">Trend Efficiency Regime Filter</div><div class="model-desc">Calculates the ratio of net price displacement to total path length over 10 bars. A value above 0.55 signals trending, below 0.35 signals ranging. Determines which model leads — the most critical decision in systematic trading.</div></div></div>
+      <div class="model-card"><div class="model-num">04</div><div><div class="model-title">VWAP Institutional Filter</div><div class="model-desc">Calculates volume-weighted average price and measures where current price sits relative to it. Institutional traders anchor to VWAP — price above means institutions are net buyers. Acts as final confirmation before any trade setup.</div></div></div>
+      <div class="model-card"><div class="model-num">05</div><div><div class="model-title">Volatility Regime Classifier</div><div class="model-desc">Compares 10-day realized volatility to the 30-day average. LOW regime boosts signal confidence by 20%. HIGH regime reduces it by 30%. EXTREME regime suppresses all trade setups.</div></div></div>
+      <div class="model-card"><div class="model-num">06</div><div><div class="model-title">Sharpe-Weighted Aggregation</div><div class="model-desc">Instead of fixed timeframe weights, the composite score weights each timeframe by its recent Sharpe ratio. Timeframes that have been more accurate recently get more weight automatically — self-adjusting in real time.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="section-label">By the numbers</div>
+  <div class="section-title">Built for serious traders</div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Timeframes analyzed per instrument</div></div>
+    <div class="stat-card"><div class="stat-num">6</div><div class="stat-label">Quant models running simultaneously</div></div>
+    <div class="stat-card"><div class="stat-num">30m</div><div class="stat-label">Score flip check interval</div></div>
+    <div class="stat-card"><div class="stat-num">24/7</div><div class="stat-label">Live on Railway cloud — always on</div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="section-label">Get Started</div>
+  <h2>Start trading with<br><span style="background:linear-gradient(135deg,var(--blue),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">quant-grade analysis</span></h2>
+  <p>Daily reports at 7:30 AM EAT. Trade setups with exact entry, stop, and targets. Score flip alerts the moment markets shift.</p>
+  <a href="https://t.me/" class="btn-primary">Open QuantRisk Bot in Telegram</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">QUANTRISK BOT</div>
+  <div class="footer-text">Powered by Twelve Data · Finnhub · Railway · Not financial advice</div>
+  <div class="footer-text" id="footer-time" style="font-family:var(--mono);font-size:10px;color:var(--muted)"></div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════
+// CONFIG — replace with your Railway API URL
+// ══════════════════════════════════════════════════
+const API_BASE = window.location.origin; // same domain on Railway
+// const API_BASE = 'https://your-app.railway.app'; // or set explicitly
+
+let AUTH_USER = '';
+let AUTH_PASS = '';
+let refreshTimer = null;
+
+// ── Clock ──────────────────────────────────────────
+function updateClock() {
+  const eat = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Africa/Nairobi',
+    hour:'2-digit', minute:'2-digit', second:'2-digit',
+    day:'2-digit', month:'short', year:'numeric'
+  }).format(new Date());
+  document.getElementById('footer-time').textContent = eat + ' EAT';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ── Login ──────────────────────────────────────────
+function doLogin() {
+  AUTH_USER = document.getElementById('login-user').value.trim();
+  AUTH_PASS = document.getElementById('login-pass').value.trim();
+  if (!AUTH_USER || !AUTH_PASS) return;
+  fetchData(true);
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// ── Fetch data ─────────────────────────────────────
+async function fetchData(force = false) {
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  try {
+    const headers = {
+      'Authorization': 'Basic ' + btoa(AUTH_USER + ':' + AUTH_PASS)
+    };
+
+    const [scoresRes, newsRes] = await Promise.all([
+      fetch(`${API_BASE}/api/scores`, { headers }),
+      fetch(`${API_BASE}/api/news`,   { headers }),
+    ]);
+
+    if (scoresRes.status === 401) {
+      errEl.style.display = 'block';
+      AUTH_USER = ''; AUTH_PASS = '';
+      return;
+    }
+    if (!scoresRes.ok) throw new Error('API error ' + scoresRes.status);
+
+    // Show dashboard
+    document.getElementById('login-overlay').style.display  = 'none';
+    document.getElementById('dashboard-content').style.display = 'block';
+
+    const scores = await scoresRes.json();
+    const news   = newsRes.ok ? await newsRes.json() : { items: [] };
+
+    renderScores(scores);
+    renderNews(news);
+
+    const now = new Date().toLocaleTimeString('en-GB', { timeZone: 'Africa/Nairobi', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById('last-updated').textContent = 'Updated ' + now + ' EAT';
+
+    // Update Telegram mockup with live gold data
+    updateMockup(scores.gold);
+    updateTicker(scores);
+
+  } catch (e) {
+    console.error(e);
+    if (document.getElementById('dashboard-content').style.display === 'none') {
+      errEl.textContent = 'Connection error. Check API URL.';
+      errEl.style.display = 'block';
+    }
+  }
+}
+
+// ── Render score cards ─────────────────────────────
+function barColor(score) {
+  if (score >= 65) return 'var(--green)';
+  if (score <= 35) return 'var(--red)';
+  return 'var(--amber)';
+}
+function verdictClass(v) {
+  const m = { 'STRONG BUY':'strong-buy', 'BUY':'buy', 'STRONG SELL':'strong-sell', 'SELL':'sell', 'NEUTRAL':'neutral' };
+  return m[v] || 'neutral';
+}
+
+function renderScores(data) {
+  const container = document.getElementById('score-cards');
+  container.innerHTML = '';
+
+  ['gold','us30'].forEach(key => {
+    const d = data[key];
+    if (!d) return;
+    const isUp = d.pct >= 0;
+    const card = document.createElement('div');
+    card.className = `score-card ${key}`;
+
+    const tfs = d.timeframes || [];
+    const tfRows = tfs.map(tf => `
+      <div class="tf-item">
+        <span class="tf-label">${tf.label}</span>
+        <div class="tf-bar-bg">
+          <div class="tf-bar-fill" style="width:${tf.score}%;background:${barColor(tf.score)}"></div>
+        </div>
+        <span class="tf-score" style="color:${barColor(tf.score)}">${Math.round(tf.score)}</span>
+        <span class="tf-verdict" style="color:${barColor(tf.score)}">${tf.verdict}</span>
+      </div>`).join('');
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-name">
+          ${key==='gold'?'🥇':'🏦'} ${d.name}
+          <span class="card-class">${d.type}</span>
+        </div>
+        <div class="card-price">
+          <div class="price">\$${d.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+          <div class="change ${isUp?'up':'dn'}">${isUp?'▲':'▼'} ${Math.abs(d.pct).toFixed(2)}%</div>
+        </div>
+      </div>
+      <div class="tf-row">${tfRows}</div>
+      <div class="verdict-badge ${verdictClass(d.overall_verdict)}">${d.overall_verdict} · ${Math.round(d.overall_score)}</div>
+    `;
+    container.appendChild(card);
+  });
+
+  // Signals — use gold daily signals
+  const sig = data.gold?.signals || {};
+  renderSignals(sig);
+
+  // Setups
+  renderSetups(data.gold, data.us30);
+}
+
+function renderSignals(sig) {
+  const strip = document.getElementById('signals-strip');
+  const erPct = Math.round((sig.trend_er || 0) * 100);
+  const momColor  = barColor(sig.momentum || 50);
+  const zsColor   = barColor(sig.zscore   || 50);
+  const erColor   = erPct > 55 ? 'var(--green)' : erPct < 35 ? 'var(--red)' : 'var(--amber)';
+  const vwapColor = barColor(sig.vwap || 50);
+  const volColor  = sig.vol_regime==='LOW'?'var(--green)':sig.vol_regime==='EXTREME'?'var(--red)':'var(--amber)';
+
+  strip.innerHTML = `
+    <div class="signal-item">
+      <div class="signal-label">Momentum</div>
+      <div class="signal-val" style="color:${momColor}">${Math.round(sig.momentum||50)}</div>
+      <div class="signal-desc">${sig.momentum>=60?'Bullish':sig.momentum<=40?'Bearish':'Neutral'}</div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-label">Z-Score</div>
+      <div class="signal-val" style="color:${zsColor}">${Math.round(sig.zscore||50)}</div>
+      <div class="signal-desc">${sig.zscore>=60?'Above mean':sig.zscore<=40?'Below mean':'At mean'}</div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-label">Trend ER</div>
+      <div class="signal-val" style="color:${erColor}">${erPct}%</div>
+      <div class="signal-desc">${sig.regime||'MIXED'}</div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-label">VWAP</div>
+      <div class="signal-val" style="color:${vwapColor}">${Math.round(sig.vwap||50)}</div>
+      <div class="signal-desc">${sig.vwap>=55?'Above VWAP':sig.vwap<=45?'Below VWAP':'At VWAP'}</div>
+    </div>
+    <div class="signal-item">
+      <div class="signal-label">Vol Regime</div>
+      <div class="signal-val" style="color:${volColor};font-size:13px">${sig.vol_regime||'NORMAL'}</div>
+      <div class="signal-desc">${sig.vol_regime==='LOW'?'Conf +20%':sig.vol_regime==='HIGH'?'Conf -30%':sig.vol_regime==='EXTREME'?'No setups':''}</div>
+    </div>
+  `;
+}
+
+function renderSetups(gold, us30) {
+  const row = document.getElementById('setup-row');
+  row.innerHTML = [gold, us30].map(d => {
+    if (!d) return '';
+    const s = d.setup || {};
+    const dirColor = s.direction==='LONG'?'var(--green)':s.direction==='SHORT'?'var(--red)':'var(--amber)';
+    if (s.direction === 'FLAT') {
+      return `<div class="setup-card">
+        <h4>${d.name} — Trade Setup</h4>
+        <div style="color:var(--muted);font-family:var(--mono);font-size:12px;padding:20px 0">
+          No active setup — market neutral
+        </div>
+      </div>`;
+    }
+    return `<div class="setup-card">
+      <h4>${d.name} — Trade Setup</h4>
+      <div class="setup-grid">
+        <div class="setup-item"><div class="lbl">Direction</div><div class="val" style="color:${dirColor}">${s.direction}</div></div>
+        <div class="setup-item"><div class="lbl">Confidence</div><div class="val" style="color:${dirColor}">${s.confidence}%</div></div>
+        <div class="setup-item"><div class="lbl">Entry</div><div class="val" style="color:#60a5fa">\$${s.entry_low} – \$${s.entry_high}</div></div>
+        <div class="setup-item"><div class="lbl">Stop</div><div class="val" style="color:var(--red)">\$${s.stop}</div></div>
+        <div class="setup-item"><div class="lbl">TP1</div><div class="val" style="color:var(--green)">\$${s.tp1} <span style="color:var(--muted);font-size:11px">RR 1:${s.rr1}</span></div></div>
+        <div class="setup-item"><div class="lbl">TP2</div><div class="val" style="color:var(--green)">\$${s.tp2} <span style="color:var(--muted);font-size:11px">RR 1:${s.rr2}</span></div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Render news ────────────────────────────────────
+function renderNews(data) {
+  const card = document.getElementById('news-card');
+  const items = data.items || [];
+  if (!items.length) {
+    card.innerHTML = '<h4>Live Market News</h4><div style="color:var(--muted);font-size:13px">No news available.</div>';
+    return;
+  }
+  card.innerHTML = '<h4>Live Market News</h4>' + items.map(n => {
+    const t = n.ts ? new Date(n.ts*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="news-item">
+      <a class="news-headline" href="${n.url}" target="_blank" rel="noopener">${n.headline}</a>
+      <div class="news-meta"><span>${n.source}</span>${t?`<span>${t}</span>`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Update ticker bar ──────────────────────────────
+function updateTicker(data) {
+  const gold  = data.gold;
+  const us30  = data.us30;
+  if (!gold || !us30) return;
+
+  function tickItem(d) {
+    const up = d.pct >= 0;
+    return `<span class="ticker-item">
+      <span class="sym">${d.symbol}</span>
+      <span>${d.name}</span>
+      <span class="${up?'up':'dn'}">\$${d.price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} ${up?'▲':'▼'} ${Math.abs(d.pct).toFixed(2)}%</span>
+      <span style="color:${barColor(d.overall_score)}">${d.overall_verdict}</span>
+    </span>`;
+  }
+
+  const goldReg = gold.signals?.regime || 'MIXED';
+  const inner = [
+    tickItem(gold), tickItem(us30),
+    `<span class="ticker-item"><span class="sym">REGIME</span><span>Gold: ${goldReg}</span></span>`,
+    tickItem(gold), tickItem(us30),
+    `<span class="ticker-item"><span class="sym">REGIME</span><span>Gold: ${goldReg}</span></span>`,
+  ].join('');
+  document.getElementById('ticker-inner').innerHTML = inner;
+}
+
+// ── Update Telegram mockup ─────────────────────────
+function updateMockup(gold) {
+  if (!gold) return;
+  const up = gold.pct >= 0;
+  const tfs = gold.timeframes || [];
+  const setup = gold.setup || {};
+  const now = new Date().toLocaleString('en-GB', {timeZone:'Africa/Nairobi',day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('tg-date').textContent = now + ' EAT';
+  document.getElementById('tg-price').textContent = `\$${gold.price.toFixed(2)}  ${up?'▲':'▼'} ${up?'+':''}${gold.pct.toFixed(2)}%`;
+  document.getElementById('tg-regime').textContent = gold.signals?.regime || 'MIXED';
+
+  const tfIds = ['tg-15m','tg-1h','tg-4h','tg-daily','tg-weekly'];
+  tfs.forEach((tf,i) => {
+    const el = document.getElementById(tfIds[i]);
+    if (el) el.textContent = `${Math.round(tf.score)}  ${tf.verdict}`;
+  });
+
+  if (setup.direction && setup.direction !== 'FLAT') {
+    document.getElementById('tg-dir').textContent   = setup.direction;
+    document.getElementById('tg-entry').textContent = `\$${setup.entry_low} — \$${setup.entry_high}`;
+    document.getElementById('tg-stop').textContent  = `\$${setup.stop}`;
+    document.getElementById('tg-tp1').textContent   = `\$${setup.tp1}  RR 1:${setup.rr1}`;
+    document.getElementById('tg-tp2').textContent   = `\$${setup.tp2}  RR 1:${setup.rr2}`;
+    document.getElementById('tg-conf').textContent  = `${setup.confidence}%`;
+  }
+
+  const vEmoji = gold.overall_verdict.includes('STRONG')?'🟢':gold.overall_verdict.includes('BUY')?'🟡':gold.overall_verdict.includes('SELL')?'🔴':'⚪';
+  document.getElementById('tg-verdict').textContent = `${vEmoji} VERDICT: ${gold.overall_verdict}`;
+}
+
+// ── Auto-refresh every 30 seconds ─────────────────
+function startAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => fetchData(), 30000);
+}
+
+// ── Scroll reveal ──────────────────────────────────
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.feature-card,.model-card,.stat-card,.step').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  revealObserver.observe(el);
+});
+
+startAutoRefresh();
+</script>
+</body>
+</html>
